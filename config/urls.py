@@ -18,7 +18,7 @@ from django.contrib import admin
 from django.urls import path, include
 from django.http import HttpResponse, JsonResponse
 
-def health(req):
+def health(request):
     return JsonResponse({'status': 'ok'}, status=200)
 
 urlpatterns = [
