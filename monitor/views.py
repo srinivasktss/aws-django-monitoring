@@ -2,6 +2,7 @@ from django.http import JsonResponse, HttpResponse
 import time
 import random
 import logging
+from django.db import connection
 
 logger = logging.getLogger(__name__)
 
@@ -24,9 +25,14 @@ def flaky(request):
 
 def slow(request):
     params = request.GET
-    seconds = float(params.get('seconds', 1.0))
+    seconds: float = float(params.get('seconds', 1.0))
     start = time.monotonic()
     time.sleep(seconds)
+
+    with connection.cursor() as cur:
+        logger.info(f'database called with seconds: {seconds}')
+        cur.execute('SELECT pg_sleep(%s);', [seconds])
+
     duration_ms = round((time.monotonic() - start) * 1000)
     logger.info("slow endpoint finished", extra={"path": request.path, "status": 200, "duration_ms": duration_ms})
     return JsonResponse({"status": "ok", "slept_seconds": seconds})
